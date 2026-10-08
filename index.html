@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bento</title>
+    <link rel="icon" type="image/png" href="/logobg.png" />
+    <style>
+      .carregando-bento { position: fixed; inset: 0; display: grid; place-items: center; background: #0e0e10; }
+      .carregando-bento img { width: 76px; height: 76px; animation: respirar-bento 1.6s ease-in-out infinite; }
+      @keyframes respirar-bento { 0%, 100% { transform: scale(0.94); opacity: 0.75; } 50% { transform: scale(1); opacity: 1; } }
+      html.janela-sobreposta .carregando-bento { display: none; }
+    </style>
+  </head>
+  <body>
+    <div id="raiz"><div class="carregando-bento" aria-busy="true"><img src="/logobg.png" alt="Bento" /></div></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
