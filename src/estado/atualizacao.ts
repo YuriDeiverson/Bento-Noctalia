@@ -74,6 +74,7 @@ export const useAtualizacao = create<EstadoAtualizacao>()((set, get) => ({
       }
       if (pendente && get().fase !== "disponivel") void tocarSom("peek", "avisos");
       set({ fase: pendente ? "disponivel" : "nada", verificacao: "disponivel", automatica: Boolean(pendente), versao: pendente?.version ?? dados.versao, notas: pendente?.body ?? dados.notas, ultimaVerificacao });
+      if (pendente) void get().instalar();
     } catch {
       set({ verificacao: "erro", erro: get().versaoAtual ? T.atualizacao.erroVerificacao : T.atualizacao.versaoFalhou });
     }
