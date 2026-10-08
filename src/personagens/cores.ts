@@ -10,14 +10,14 @@ export const COR_AGENTE: Record<AgenteId, string> = {
 export const ESTADOS_SVG: EstadoAgente[] = ["ocioso", "ouvindo", "pensando", "escrevendo", "sucesso", "alerta", "erro", "dormindo"];
 
 const ARTE_AGENTE: Record<AgenteId, string> = {
-  organizador: "/personagens/personagem_raposa.png",
-  tutor: "/personagens/personagem_panda.png",
-  operador: "/personagens/personagem_gato.png",
-  java: "/personagens/Gemini_Generated_Image_6i51cw6i51cw6i51.jpg",
+  organizador: "/personagens/bento/personagem.png",
+  tutor: "/personagens/paco/personagem.png",
+  operador: "/personagens/milo/personagem.png",
+  java: "/personagens/toby/personagem.jpg",
 };
 
 export function caminhoPersonagem(agente: AgenteId, estado: EstadoAgente): string {
-  if (agente === "organizador" && estado === "sucesso") return "/personagens/comemorando.png";
-  if (agente === "organizador" && (estado === "alerta" || estado === "erro")) return "/personagens/comraiva.png";
+  if (agente === "organizador" && estado === "sucesso") return "/personagens/bento/comemorando.png";
+  if (agente === "organizador" && (estado === "alerta" || estado === "erro")) return "/personagens/bento/comraiva.png";
   return ARTE_AGENTE[agente];
 }
