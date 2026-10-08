@@ -8,7 +8,7 @@
 
 ## Sobre
 
-O Bento é um aplicativo desktop que fica junto do Windows, e não dentro de uma aba do navegador. Ele aparece em três camadas:
+O Bento é um aplicativo desktop que fica junto do Windows. Estilo Notion para uso pessoal!
 
 | Camada | Onde fica | Para que serve |
 | ------ | --------- | -------------- |
