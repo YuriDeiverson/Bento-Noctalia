@@ -127,4 +127,3 @@ No GitHub, configure os segredos `TAURI_SIGNING_PRIVATE_KEY` e `TAURI_SIGNING_PR
 - Node 22 ou mais novo e pnpm
 - Rust estável, para a versão desktop
 - WebView2, que já vem no Windows 11
-

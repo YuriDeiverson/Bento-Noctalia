@@ -25,12 +25,13 @@ import { usarClaudeCode, devolverPendentesAoTerminal } from "./claude/usarClaude
 import { abaLigada } from "../../utilitarios/funcoes";
 import { useClaudeCode, sessaoAtiva } from "../../estado/claudeCode";
 import { useAtualizacao } from "../../estado/atualizacao";
-import { NATIVO, usarAreaInterativa, usarCursorFora, usarEstadoDaFrente } from "../../desktop/desktop";
+import { NATIVO, usarAreaInterativa, usarCursorFora, usarEstadoDaFrente, usarMenuDeContextoNativo } from "../../desktop/desktop";
 import { BarraDoTopo, ALTURA_DA_FAIXA } from "./barra/BarraDoTopo";
 import { alternarAbaDaBarra } from "./barra/acoesDaBarra";
 import { EspacoDoPersonagem, PersonagemContinuo } from "./animacoes/PersonagemContinuo";
 import { EtapaDeTrabalho, EtapasAnimadas } from "./animacoes/EtapasAnimadas";
 import { usarAparenciaDeBorda, variaveisDaBorda } from "../aparencia";
+import { registrarPassagemDupla } from "./ativacao";
 import type { AgenteId, EstadoAgente } from "../../tipos";
 import "./ilha.css";
 
@@ -103,6 +104,7 @@ function useAgora(intervalo: number, ativo: boolean) {
 }
 
 export function Ilha() {
+  usarMenuDeContextoNativo();
   const cfg = useConfig((s) => s.ilha);
   const somLigado = useConfig((s) => s.sons.ligado);
   const definirConfig = useConfig((s) => s.definir);
@@ -152,6 +154,7 @@ export function Ilha() {
   const anterior = useRef({ w: 0, h: 0 });
   const relogioHover = useRef<number | undefined>(undefined);
   const relogioRevelada = useRef<number | undefined>(undefined);
+  const ultimaPassagem = useRef<number | null>(null);
   useEffect(
     () => () => {
       window.clearTimeout(relogioHover.current);
@@ -181,7 +184,7 @@ export function Ilha() {
   const trabalhando = AGENTES.filter((a) => ["pensando", "escrevendo"].includes(estadoDoAgente(agentes, a)));
 
   const pedidoPendente = pedidosClaude.length > 0;
-  const estadoEfetivo = coberta && estado !== "expandida" && !revelacao && !pedidoPendente ? "escondida" : (cfg.modo === "fixo" || pedidoPendente) && estado === "escondida" ? "compacta" : estado;
+  const estadoEfetivo = coberta ? "escondida" : (cfg.modo === "fixo" || pedidoPendente) && estado === "escondida" ? "compacta" : estado;
 
   useEffect(() => {
     if (cfg.modo !== "esconder" || estadoEfetivo !== "compacta" || sobre || barraEmUso || revelacao || frescos > 0 || pomodoro.rodando || atualizacao.fase !== "nada" || pedidoPendente) return;
@@ -239,11 +242,20 @@ export function Ilha() {
   }, [claudeIndisponivel, pedidosClaude.length]);
 
   useEffect(() => {
-    if (!frente.telaCheia) return;
+    ultimaPassagem.current = null;
+  }, [cfg.modo, frente.cobre]);
+
+  useEffect(() => {
+    if (!frente.telaCheia && !(cfg.modo === "inteligente" && frente.cobre)) return;
     window.clearTimeout(relogioHover.current);
     setRevelada(false);
     if (useIlha.getState().estado === "expandida") recolher();
-  }, [frente.telaCheia, recolher]);
+  }, [cfg.modo, frente.cobre, frente.telaCheia, recolher]);
+
+  useEffect(() => {
+    if (cfg.modo !== "inteligente" || !coberta) return;
+    if (useIlha.getState().estado === "expandida") recolher();
+  }, [cfg.modo, coberta, recolher]);
 
   const compacta = useMemo(() => {
     if (atualizacao.fase !== "nada") return { tipo: "atualizacao" as const, largura: 350 };
@@ -424,10 +436,18 @@ export function Ilha() {
           className="ilha-gatilho"
           onDragEnter={(e) => {
             if (!Array.from(e.dataTransfer.types).includes("Files")) return;
+            ultimaPassagem.current = null;
             setRevelada(true);
             abrir("chat");
           }}
           onPointerEnter={() => {
+            if (cfg.modo === "inteligente") {
+              const passagem = registrarPassagemDupla(ultimaPassagem.current, Date.now());
+              ultimaPassagem.current = passagem.proximaPassagem;
+              if (!passagem.ativada) return;
+            } else {
+              ultimaPassagem.current = null;
+            }
             setRevelada(true);
             definirEstado("compacta");
             void tocarSom("peek");

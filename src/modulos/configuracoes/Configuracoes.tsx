@@ -3,7 +3,7 @@ import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
-  Settings, Palette, PanelTop, PanelBottom, Timer, Users, Volume2, Maximize, Keyboard, ShieldCheck, Database, Info, Wrench,
+  Settings, Palette, PanelTop, PanelBottom, Timer, Users, Volume2, Maximize, Keyboard, ShieldCheck, Database, Info, Wrench, BookOpen,
   GripVertical, Download, Upload, RotateCcw, Trash2, DatabaseBackup, SquareTerminal,
 } from "lucide-react";
 import { CabecalhoAba } from "../../componentes/CabecalhoAba";
@@ -25,6 +25,7 @@ import { DESTAQUE_PADRAO } from "../../janelas/area-de-trabalho/usarTema";
 import { EditorFoto } from "../../componentes/FotoPerfil";
 import { SeletorDeFundo } from "./SeletorDeFundo";
 import { SecaoClaudeCode } from "./SecaoClaudeCode";
+import { AtualizacaoNasConfiguracoes } from "../atualizacao/Atualizacao";
 import type { EstadoAgente, Rota } from "../../tipos";
 
 type Secao = keyof typeof T.configuracoes.secoes;
@@ -34,6 +35,7 @@ const ICONES: Record<Secao, React.ReactNode> = {
   aparencia: <Palette size={15} />,
   ilha: <PanelTop size={15} />,
   dock: <PanelBottom size={15} />,
+  journal: <BookOpen size={15} />,
   pomodoro: <Timer size={15} />,
   agentes: <Users size={15} />,
   sons: <Volume2 size={15} />,
@@ -493,6 +495,14 @@ export default function Configuracoes() {
         <AvisoFaixa>{T.configuracoes.appsWindowsDock}</AvisoFaixa>
       </>
     ),
+    journal: (
+      <>
+        <p className="campo-dica">{T.configuracoes.journal.dica}</p>
+        <LinhaAlternador rotulo={T.configuracoes.journal.humor} ligado={cfg.journal.humor} aoMudar={(humor) => cfg.definir({ journal: { ...cfg.journal, humor } })} />
+        <LinhaAlternador rotulo={T.configuracoes.journal.agua} ligado={cfg.journal.agua} aoMudar={(agua) => cfg.definir({ journal: { ...cfg.journal, agua } })} />
+        <LinhaAlternador rotulo={T.configuracoes.journal.sono} ligado={cfg.journal.sono} aoMudar={(sono) => cfg.definir({ journal: { ...cfg.journal, sono } })} />
+      </>
+    ),
     pomodoro: (
       <>
         <span className="campo-rotulo">{T.configuracoes.duracoes}</span>
@@ -616,6 +626,7 @@ export default function Configuracoes() {
         <p>{T.configuracoes.sobreTexto}</p>
         <p className="texto-2">{T.app.versao}</p>
         <p className="texto-2">{T.configuracoes.licenca}</p>
+        <AtualizacaoNasConfiguracoes />
         <div className="campo-grupo">
           <span className="campo-rotulo">{T.configuracoes.diagnostico}</span>
           <span className="texto-2">{T.configuracoes.itensGuardados(listarChaves().length, (tamanhoGuardado() / 1024).toFixed(0))}</span>

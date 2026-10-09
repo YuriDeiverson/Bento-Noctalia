@@ -7,9 +7,31 @@ globalThis.localStorage = { getItem: () => null, setItem: () => undefined };
 globalThis.window = { setTimeout, clearTimeout };
 const servidor = await createServer({ configFile: false, server: { middlewareMode: true, hmr: false, watch: null }, appType: "custom", optimizeDeps: { noDiscovery: true } });
 after(() => servidor.close());
+const { registrarPassagemDupla, JANELA_PASSAGEM_DUPLA_MS } = await servidor.ssrLoadModule("/src/janelas/ilha/ativacao.ts");
 const { alternarAbaDaBarra, criarAlternadorDoIniciar } = await servidor.ssrLoadModule("/src/janelas/ilha/barra/acoesDaBarra.ts");
 const { useIlha } = await servidor.ssrLoadModule("/src/estado/ilha.ts");
 const { controle, sistema } = await servidor.ssrLoadModule("/src/ponte/ponteLocal.ts");
+
+test("a ilha só revela após duas passagens rápidas pela borda", () => {
+  const primeira = registrarPassagemDupla(null, 1000);
+  assert.equal(primeira.ativada, false);
+  const segunda = registrarPassagemDupla(primeira.proximaPassagem, 1000 + JANELA_PASSAGEM_DUPLA_MS);
+  assert.equal(segunda.ativada, true);
+  assert.equal(segunda.proximaPassagem, null);
+});
+
+test("passagem lenta reinicia a sequência de ativação", () => {
+  const primeira = registrarPassagemDupla(null, 1000);
+  const atrasada = registrarPassagemDupla(primeira.proximaPassagem, 1001 + JANELA_PASSAGEM_DUPLA_MS);
+  assert.equal(atrasada.ativada, false);
+  assert.equal(atrasada.proximaPassagem, 1001 + JANELA_PASSAGEM_DUPLA_MS);
+});
+
+test("passagem com relógio fora de ordem não ativa a ilha", () => {
+  const resultado = registrarPassagemDupla(1000, 999);
+  assert.equal(resultado.ativada, false);
+  assert.equal(resultado.proximaPassagem, 999);
+});
 
 test("clicar novamente na mesma aba recolhe a ilha", () => {
   useIlha.setState({ estado: "compacta", aba: "hoje" });

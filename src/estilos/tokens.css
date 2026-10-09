@@ -65,8 +65,8 @@
   --texto: #f2f2f2;
   --texto-2: #9a9aa0;
   --texto-3: #6b6b72;
-  --primario: #f2f2f2;
-  --primario-texto: #111111;
+  --primario: var(--superficie-2);
+  --primario-texto: var(--texto);
   --sucesso: #3dd68c;
   --alerta: #f5b651;
   --erro: #ff6b6b;

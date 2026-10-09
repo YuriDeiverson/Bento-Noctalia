@@ -7,7 +7,7 @@ use std::time::Duration;
 use serde::Deserialize;
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
-use tauri::{AppHandle, Emitter, Manager, RunEvent, WebviewUrl, WebviewWindow, WebviewWindowBuilder, WindowEvent};
+use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, RunEvent, WebviewUrl, WebviewWindow, WebviewWindowBuilder, WindowEvent};
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 
 mod barra_windows;
@@ -17,6 +17,16 @@ mod miniaturas;
 const PORTA: u16 = 47831;
 const ALTURA_ILHA: f64 = 720.0;
 const ALTURA_DOCK: f64 = 250.0;
+
+#[derive(Clone, PartialEq, Eq)]
+struct GeometriaMonitor {
+    nome: Option<String>,
+    x: i32,
+    y: i32,
+    largura: u32,
+    altura: u32,
+    escala: u64,
+}
 
 #[derive(Deserialize, Clone, Copy)]
 struct Retangulo {
@@ -153,6 +163,54 @@ fn criar_sobreposta(app: &AppHandle, rotulo: &str, y: f64, x: f64, largura: f64,
         .position(x, y)
         .inner_size(largura, altura)
         .build()
+}
+
+fn geometria_monitor_principal(app: &AppHandle) -> Option<GeometriaMonitor> {
+    let monitor = app.primary_monitor().ok().flatten().or_else(|| app.available_monitors().ok()?.into_iter().next())?;
+    let posicao = monitor.position();
+    let tamanho = monitor.size();
+    Some(GeometriaMonitor {
+        nome: monitor.name().cloned(),
+        x: posicao.x,
+        y: posicao.y,
+        largura: tamanho.width,
+        altura: tamanho.height,
+        escala: monitor.scale_factor().to_bits(),
+    })
+}
+
+fn realinhar_sobrepostas(app: &AppHandle, monitor: &GeometriaMonitor) {
+    let escala = f64::from_bits(monitor.escala);
+    let altura_ilha = (ALTURA_ILHA * escala).round() as u32;
+    let altura_dock = (ALTURA_DOCK * escala).round() as u32;
+    for (rotulo, y, altura) in [
+        ("ilha", monitor.y, altura_ilha),
+        ("dock", monitor.y + monitor.altura as i32 - altura_dock as i32, altura_dock),
+    ] {
+        if let Some(janela) = app.get_webview_window(rotulo) {
+            if let Err(erro) = janela.set_size(PhysicalSize::new(monitor.largura, altura)) {
+                eprintln!("Falha ao ajustar o tamanho da janela {rotulo}: {erro}");
+            }
+            if let Err(erro) = janela.set_position(PhysicalPosition::new(monitor.x, y)) {
+                eprintln!("Falha ao realinhar a janela {rotulo}: {erro}");
+            }
+        }
+    }
+}
+
+fn vigiar_monitores(app: AppHandle) {
+    std::thread::spawn(move || {
+        let mut anterior = None;
+        loop {
+            if let Some(monitor) = geometria_monitor_principal(&app) {
+                if anterior.as_ref() != Some(&monitor) {
+                    realinhar_sobrepostas(&app, &monitor);
+                    anterior = Some(monitor);
+                }
+            }
+            std::thread::sleep(Duration::from_millis(750));
+        }
+    });
 }
 
 fn vigiar_cursor(app: AppHandle) {
@@ -384,6 +442,7 @@ pub fn run() {
                     let _ = j.set_ignore_cursor_events(true);
                 }
             }
+            vigiar_monitores(handle.clone());
             vigiar_cursor(handle.clone());
 
             let abrir = MenuItem::with_id(app, "abrir", "Abrir o Bento", true, None::<&str>)?;

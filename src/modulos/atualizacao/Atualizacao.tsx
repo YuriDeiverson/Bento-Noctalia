@@ -72,3 +72,42 @@ export default function Atualizacao() {
     </>
   );
 }
+
+export function AtualizacaoNasConfiguracoes() {
+  const atualizacao = useAtualizacao();
+  const ocupada = atualizacao.verificacao === "verificando" || atualizacao.fase === "baixando" || atualizacao.fase === "instalando";
+  const disponivel = atualizacao.verificacao === "disponivel";
+  const estado = atualizacao.fase === "baixando" ? T.atualizacao.baixando(Math.round(atualizacao.progresso * 100))
+    : atualizacao.fase === "instalando" ? T.atualizacao.instalando
+    : atualizacao.verificacao === "verificando" ? T.atualizacao.verificando
+    : atualizacao.verificacao === "atualizado" ? T.atualizacao.atualizado
+    : atualizacao.verificacao === "sem_versoes" ? T.atualizacao.semVersoes
+    : disponivel ? T.atualizacao.disponivel(atualizacao.versao)
+    : T.atualizacao.pronto;
+
+  useEffect(() => {
+    void useAtualizacao.getState().carregarVersao();
+  }, []);
+
+  return (
+    <div className="campo-grupo">
+      <span className="campo-rotulo">{T.atualizacao.titulo}</span>
+      <div className="linha" style={{ flexWrap: "wrap" }}>
+        <span className="texto-2">{T.atualizacao.versaoAtual}: {atualizacao.versaoAtual ? `v${atualizacao.versaoAtual}` : T.geral.carregando}</span>
+        <Botao pequeno icone={<RefreshCw size={14} />} disabled={ocupada} onClick={() => void atualizacao.verificar(true)}>
+          {ocupada ? T.atualizacao.verificando : T.atualizacao.verificar}
+        </Botao>
+        {disponivel && !atualizacao.automatica && (
+          <a className="botao botao-primario botao-pequeno" href={`${VERSOES}/latest`} target="_blank" rel="noopener noreferrer">
+            <Download size={14} />{T.atualizacao.baixarGithub}
+          </a>
+        )}
+      </div>
+      <span className="texto-2" role="status" aria-live="polite">{estado}</span>
+      {atualizacao.erro && <AvisoFaixa tipo="erro">{atualizacao.erro}</AvisoFaixa>}
+      {atualizacao.ultimaVerificacao && (
+        <span className="texto-3">{T.atualizacao.ultimaVerificacao}: {new Date(atualizacao.ultimaVerificacao).toLocaleString("pt-BR")}</span>
+      )}
+    </div>
+  );
+}

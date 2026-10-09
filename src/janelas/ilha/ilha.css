@@ -461,7 +461,7 @@
 }
 
 .ilha-botao-primario:hover:not(:disabled) {
-  background: #fff;
+  background: color-mix(in srgb, var(--i-tinta) 88%, var(--i-tinta-inversa));
 }
 
 .ilha-botao-redondo {

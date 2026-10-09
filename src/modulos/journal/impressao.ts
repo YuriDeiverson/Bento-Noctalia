@@ -16,7 +16,7 @@ function litros(ml: number) {
   return (ml / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 });
 }
 
-export function imprimirMes(mes: Date) {
+export function imprimirMes(mes: Date, avisarFalha: () => void) {
   const { tarefas, dias, habitos, registros } = useRotina.getState();
   const cfg = useConfig.getState();
   const P = T.journal.impressao;
@@ -162,11 +162,42 @@ export function imprimirMes(mes: Date) {
   <footer>${e(P.rodape)}</footer>
   </div></body></html>`;
 
-  const janela = window.open("", "_blank", "width=860,height=1000");
-  if (!janela) return false;
-  janela.document.write(html);
-  janela.document.close();
-  janela.focus();
-  window.setTimeout(() => janela.print(), 350);
+  const iframe = document.createElement("iframe");
+  iframe.title = P.dias;
+  iframe.setAttribute("aria-hidden", "true");
+  iframe.style.cssText = "position:fixed;left:0;top:0;width:100vw;height:100vh;border:0;opacity:0;pointer-events:none;z-index:-1";
+  const janela = iframe.contentWindow;
+  if (!janela) {
+    avisarFalha();
+    return false;
+  }
+
+  let removido = false;
+  const limpar = () => {
+    if (removido) return;
+    removido = true;
+    window.clearTimeout(limpeza);
+    iframe.remove();
+  };
+  const limpeza = window.setTimeout(limpar, 5 * 60_000);
+  iframe.addEventListener("load", () => {
+    const visualizador = iframe.contentWindow;
+    if (!visualizador) {
+      limpar();
+      avisarFalha();
+      return;
+    }
+    visualizador.addEventListener("afterprint", limpar, { once: true });
+    try {
+      visualizador.focus();
+      visualizador.print();
+    } catch (erro) {
+      console.error("Falha ao imprimir o mês do Journal", erro);
+      limpar();
+      avisarFalha();
+    }
+  }, { once: true });
+  iframe.srcdoc = html;
+  document.body.append(iframe);
   return true;
 }

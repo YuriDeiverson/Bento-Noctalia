@@ -1139,9 +1139,9 @@
   font-size: 12px;
   line-height: 1.3;
   white-space: nowrap;
-  color: #111;
-  background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: var(--texto);
+  background: var(--superficie);
+  border: 1px solid var(--borda);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
   display: flex;
   align-items: center;
@@ -1167,7 +1167,7 @@
   left: 50%;
   margin-left: -5px;
   border: 5px solid transparent;
-  border-top-color: #fff;
+  border-top-color: var(--superficie);
 }
 
 .balao-pensamento {
@@ -1194,7 +1194,7 @@
   position: absolute;
   left: 50%;
   border-radius: 50%;
-  background: #fff;
+  background: var(--superficie);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
-import { NATIVO, usarAreaInterativa, usarCursorFora, usarAppsAbertos, agirNaJanela, alternarSistemaNativo, mostrarMiniaturas, ocultarBarraDoWindows, reservarEspacoDoDock, usarEstadoDaFrente, type AppAberto } from "../../desktop/desktop";
+import { NATIVO, usarAreaInterativa, usarCursorFora, usarAppsAbertos, agirNaJanela, alternarSistemaNativo, mostrarMiniaturas, ocultarBarraDoWindows, reservarEspacoDoDock, usarEstadoDaFrente, usarMenuDeContextoNativo, type AppAberto } from "../../desktop/desktop";
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform, type MotionValue } from "motion/react";
 import { useConfig } from "../../estado/configuracoes";
 import { useInterface } from "../../estado/interface";
@@ -224,6 +224,7 @@ function AppsDoWindows({ mouseX, ampliar, ativo }: { mouseX: MotionValue<number>
 }
 
 export function Dock() {
+  usarMenuDeContextoNativo();
   const cfg = useConfig((s) => s.dock);
   const aparencia = usarAparenciaDeBorda(cfg.fundo, cfg.opacidade);
   const nomesBarra = useConfig((s) => s.barraLateral);

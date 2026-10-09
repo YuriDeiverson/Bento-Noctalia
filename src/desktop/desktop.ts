@@ -14,6 +14,15 @@ export const NATIVO = Boolean(internos);
 
 export const JANELA: NomeJanela | null = NATIVO ? ((internos?.metadata?.currentWindow?.label as NomeJanela | undefined) ?? "sistema") : null;
 
+export function usarMenuDeContextoNativo() {
+  useEffect(() => {
+    if (!NATIVO || (JANELA !== "ilha" && JANELA !== "dock")) return;
+    const impedirMenu = (evento: MouseEvent) => evento.preventDefault();
+    document.addEventListener("contextmenu", impedirMenu);
+    return () => document.removeEventListener("contextmenu", impedirMenu);
+  }, []);
+}
+
 export type Comando =
   | { tipo: "irPara"; rota: Rota; parametros?: Record<string, string> }
   | { tipo: "abrirConexao"; id: ServicoId }
@@ -315,17 +324,24 @@ export function usarEstadoDaFrente(ativo: boolean): EstadoDaFrente {
       return;
     }
     let vivo = true;
+    let consultando = false;
     const ler = async () => {
-      const r = await invocar<EstadoDaFrente>("frente_cobre_tela");
-      if (!vivo) return;
-      const cobre = Boolean(r?.cobre);
-      const telaCheia = Boolean(r?.telaCheia);
-      const maximizada = Boolean(r?.maximizada);
-      const frente: TipoDaFrente = r?.frente === "app" || r?.frente === "sobreposta" ? r.frente : "area_de_trabalho";
-      setEstado((anterior) => (anterior.cobre === cobre && anterior.telaCheia === telaCheia && anterior.maximizada === maximizada && anterior.frente === frente ? anterior : { cobre, telaCheia, maximizada, frente }));
+      if (consultando) return;
+      consultando = true;
+      try {
+        const r = await invocar<EstadoDaFrente>("frente_cobre_tela");
+        if (!vivo) return;
+        const cobre = Boolean(r?.cobre);
+        const telaCheia = Boolean(r?.telaCheia);
+        const maximizada = Boolean(r?.maximizada);
+        const frente: TipoDaFrente = r?.frente === "app" || r?.frente === "sobreposta" ? r.frente : "area_de_trabalho";
+        setEstado((anterior) => (anterior.cobre === cobre && anterior.telaCheia === telaCheia && anterior.maximizada === maximizada && anterior.frente === frente ? anterior : { cobre, telaCheia, maximizada, frente }));
+      } finally {
+        consultando = false;
+      }
     };
     void ler();
-    const t = window.setInterval(() => void ler(), 800);
+    const t = window.setInterval(() => void ler(), 250);
     return () => {
       vivo = false;
       window.clearInterval(t);

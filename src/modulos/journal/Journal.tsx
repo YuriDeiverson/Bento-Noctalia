@@ -70,7 +70,7 @@ function MiniCalendario({ data, aoEscolher }: { data: string; aoEscolher: (d: st
   );
 }
 
-function GradeHabitos({ data }: { data: string }) {
+export function GradeHabitos({ data }: { data: string }) {
   const habitos = useRotina((s) => s.habitos).filter((h) => !h.arquivado);
   const registros = useRotina((s) => s.registros);
   const registrar = useRotina((s) => s.registrarHabito);
@@ -219,6 +219,7 @@ function NovoHabito({ aberto, aoFechar }: { aberto: boolean; aoFechar: () => voi
 export default function Journal() {
   const parametros = useInterface((s) => s.parametros);
   const avisar = useInterface((s) => s.avisar);
+  const camposJournal = useConfig((s) => s.journal);
   const [data, setData] = useState(parametros.data && /^\d{4}-\d{2}-\d{2}$/.test(parametros.data) ? parametros.data : hojeISO());
   const tarefas = useRotina((s) => s.tarefas);
   const dias = useRotina((s) => s.dias);
@@ -298,7 +299,7 @@ export default function Journal() {
             <Botao pequeno icone={<ChevronRight size={13} />} onClick={() => setData(paraISO(addDays(deISO(data), 1)))}>{T.geral.proximo}</Botao>
             <Botao pequeno soIcone variante="fantasma" icone={<Undo2 size={14} />} aria-label={T.geral.desfazer} title={`${T.geral.desfazer} (Ctrl + Z)`} disabled={!podeDesfazer} onClick={desfazer} />
             <Botao pequeno soIcone variante="fantasma" icone={<Redo2 size={14} />} aria-label={T.geral.refazer} title={`${T.geral.refazer} (Ctrl + Shift + Z)`} disabled={!podeRefazer} onClick={refazer} />
-            <Botao pequeno variante="fantasma" icone={<Printer size={13} />} onClick={() => { if (!imprimirMes(mes)) avisar(T.journal.impressao.bloqueada); }}>{T.journal.imprimirMes}</Botao>
+            <Botao pequeno variante="fantasma" icone={<Printer size={13} />} onClick={() => { void imprimirMes(mes, () => avisar(T.journal.impressao.bloqueada)); }}>{T.journal.imprimirMes}</Botao>
             {virada && <span className="etiqueta">{T.journal.viradaAtiva}</span>}
             <span className="etiqueta etiqueta-sucesso" style={{ opacity: salvo ? 1 : 0, transition: "opacity 0.3s" }} aria-live="polite">{T.geral.salvo}</span>
           </>
@@ -336,7 +337,7 @@ export default function Journal() {
           </form>
         </Cartao>
 
-        <Cartao className="col-4" titulo={T.journal.humor} icone={<Smile size={16} />}>
+        {camposJournal.humor && <Cartao className="col-4" titulo={T.journal.humor} icone={<Smile size={16} />}>
           <div className="segmentado" role="radiogroup" aria-label={T.journal.humor} style={{ width: "100%" }}>
             {(Object.keys(T.humor) as Humor[]).map((h) => (
               <button key={h} type="button" role="radio" aria-checked={dia.humor === h} aria-selected={dia.humor === h} style={{ flex: 1, justifyContent: "center" }} onClick={() => mudarDia({ humor: dia.humor === h ? undefined : h })}>
@@ -345,9 +346,9 @@ export default function Journal() {
               </button>
             ))}
           </div>
-        </Cartao>
+        </Cartao>}
 
-        <Cartao className="col-8" titulo={T.journal.sono} icone={<Moon size={16} />} acoes={<span className="texto-3" style={{ fontSize: 12 }}>{T.journal.mediaSono(media)}</span>}>
+        {camposJournal.sono && <Cartao className="col-8" titulo={T.journal.sono} icone={<Moon size={16} />} acoes={<span className="texto-3" style={{ fontSize: 12 }}>{T.journal.mediaSono(media)}</span>}>
           <div className="linha" style={{ gap: 16, flexWrap: "wrap", marginBottom: 12 }}>
             <div className="linha">
               <Botao pequeno soIcone icone={<Minus size={14} />} aria-label="-0,5" onClick={() => mudarDia({ sono: Math.max(0, (dia.sono ?? 0) - 0.5) })} />
@@ -365,10 +366,10 @@ export default function Journal() {
             </label>
           </div>
           <BarrasVerticais barras={sonoDoMes} formatar={(v) => `${v} h`} altura={90} aoEscolher={(i) => setData(paraISO(addDays(mes, i)))} selecionada={Number(data.slice(8)) - 1} />
-        </Cartao>
+        </Cartao>}
 
-        <CopoAgua data={data} />
-        <Cartao className="col-8" titulo={T.journal.diario} icone={<PenLine size={16} />}>
+        {camposJournal.agua && <CopoAgua data={data} />}
+        <Cartao className="col-12" titulo={T.journal.diario} icone={<PenLine size={16} />}>
           <Editor chave={`diario-${data}`} conteudo={dia.diario} placeholder={T.journal.diarioVazio} aoMudar={(html) => mudarDia({ diario: html })} />
         </Cartao>
 
@@ -414,7 +415,6 @@ export default function Journal() {
           </div>
         </Cartao>
 
-        <GradeHabitos data={data} />
       </div>
     </>
   );

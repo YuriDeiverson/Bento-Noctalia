@@ -32,7 +32,6 @@ export const BARRA_PADRAO: ItemBarra[] = [
   { rota: "financas", visivel: true },
   { rota: "metas", visivel: true },
   { rota: "calendario", visivel: true },
-  { rota: "atualizacao", visivel: true },
   { rota: "conquistas", visivel: true },
 ];
 
@@ -105,6 +104,7 @@ export interface Configuracoes {
   blocosInicio: { id: BlocoInicio; visivel: boolean }[];
   ilha: ConfigIlha;
   dock: { ativo: boolean; modo: ModoBorda; favoritos: Rota[]; atalhos: AtalhoDock[]; ampliar: boolean; fundo: string; opacidade: number };
+  journal: { humor: boolean; agua: boolean; sono: boolean };
   pomodoro: { foco: number; curta: number; longa: number; ciclos: number; autoProxima: boolean; tique: boolean };
   agua: { meta: number; copo: number };
   sons: { ligado: boolean; volume: number; categorias: Record<CategoriaSom, boolean> };
@@ -156,6 +156,7 @@ export const CONFIG_PADRAO: Configuracoes = {
     laterais: false,
   },
   dock: { ativo: false, modo: "inteligente", favoritos: ["chat", "journal", "estudos", "financas", "calendario"], atalhos: [], ampliar: true, fundo: FUNDO_PADRAO_DAS_BORDAS, opacidade: 1 },
+  journal: { humor: false, agua: false, sono: false },
   pomodoro: { foco: 25, curta: 5, longa: 15, ciclos: 4, autoProxima: false, tique: false },
   agua: { meta: 2000, copo: 250 },
   sons: {
@@ -202,7 +203,7 @@ export const useConfig = create<Configuracoes & AcoesConfig>()(
     {
       name: chave("configuracoes"),
       storage: armazenamento,
-      version: 17,
+      version: 19,
       migrate: (salvo, versao) => {
         const s = (salvo ?? {}) as Partial<Configuracoes>;
         if (versao < 2) {
@@ -278,7 +279,13 @@ export const useConfig = create<Configuracoes & AcoesConfig>()(
           const proxima = s.barraLateral.findIndex((item) => item.rota === "conquistas");
           s.barraLateral.splice(proxima < 0 ? s.barraLateral.length : proxima, 0, { rota: "atualizacao", visivel: true });
         }
+        if (s.ilha) {
+          const { reservarTopo: _reservarTopo, alturaReservadaTopo: _alturaReservadaTopo, ...ilha } =
+            s.ilha as Configuracoes["ilha"] & { reservarTopo?: boolean; alturaReservadaTopo?: number };
+          s.ilha = ilha;
+        }
         if (s.ia) s.ia = { ...s.ia, reservas: s.ia.reservas ?? [], modelos: s.ia.modelos ?? (s.ia.provedorId && s.ia.modelo ? { [s.ia.provedorId]: s.ia.modelo } : {}) };
+        if (versao < 19 && s.barraLateral) s.barraLateral = s.barraLateral.filter((item) => item.rota !== "atualizacao");
         return s as Configuracoes & AcoesConfig;
       },
       merge: (persistido, atual) => {
@@ -308,6 +315,7 @@ export const useConfig = create<Configuracoes & AcoesConfig>()(
             ],
           },
           dock: { ...CONFIG_PADRAO.dock, ...salvo.dock },
+          journal: { ...CONFIG_PADRAO.journal, ...salvo.journal },
           pomodoro: { ...CONFIG_PADRAO.pomodoro, ...salvo.pomodoro },
           agua: { ...CONFIG_PADRAO.agua, ...salvo.agua },
           sons: { ...CONFIG_PADRAO.sons, ...salvo.sons },
