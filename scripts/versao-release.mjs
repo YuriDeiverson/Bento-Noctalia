@@ -145,8 +145,10 @@ export async function verificarPublicacao(versao, pedir = fetch) {
   validarVersao(versao);
   let resposta;
   try {
+    const cabecalhos = { Accept: "application/vnd.github+json", "User-Agent": "Bento-release" };
+    if (process.env.GITHUB_TOKEN) cabecalhos.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
     resposta = await pedir(`https://api.github.com/repos/${REPOSITORIO}/releases/tags/v${versao}`, {
-      headers: { Accept: "application/vnd.github+json", "User-Agent": "Bento-release" },
+      headers: cabecalhos,
       signal: AbortSignal.timeout(15000),
     });
   } catch {
