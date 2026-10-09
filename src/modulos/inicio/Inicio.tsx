@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { PainelFuncoes } from "./PainelFuncoes";
 import { blocoLigado, conquistaLigada, funcaoLigada } from "../../utilitarios/funcoes";
-import { Plus, Timer, Wallet, Plug, Layers, Trophy, CalendarDays, Users, ListTodo, SlidersHorizontal, ToggleRight, GripVertical, ChevronRight, Play, Pause, RotateCcw, SkipForward } from "lucide-react";
+import { Plus, Timer, Wallet, Plug, Layers, Trophy, CalendarDays, Users, ListTodo, SlidersHorizontal, ToggleRight, GripVertical, ChevronRight } from "lucide-react";
 import { useMosaico } from "../../componentes/useMosaico";
 import { resumoPorAgente } from "../../utilitarios/contextoIa";
 import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
@@ -10,14 +10,15 @@ import { CSS } from "@dnd-kit/utilities";
 import { Cartao, Botao, Modal, Alternador, Progresso, Vazio } from "../../componentes/basicos";
 import { ItemTarefa } from "../../componentes/ItemTarefa";
 import { MapaDeCalor } from "../../componentes/MapaDeCalor";
-import { BarrasHorizontais, BarrasVerticais, Anel } from "../../componentes/Graficos";
+import { BarrasHorizontais, BarrasVerticais } from "../../componentes/Graficos";
+import { CronometroPomodoro } from "../../componentes/CronometroPomodoro";
 import { Personagem } from "../../personagens/Personagem";
 import { Marca } from "../../marcas/Marca";
 import { useConfig, type BlocoInicio } from "../../estado/configuracoes";
 import { useRotina, tarefasDoDia, habitoCumprido } from "../../estado/rotina";
 import { useEstudos, revisoesParaHoje, cartoesVencidos } from "../../estado/estudos";
-import { usePomodoro, restanteAtual, formatarRelogio } from "../../estado/pomodoro";
-import type { EtapaPomodoro } from "../../tipos";
+import { usePomodoro } from "../../estado/pomodoro";
+import { tempoEfetivoMs } from "../../utilitarios/pomodoro";
 import { useFinancas, gastoPorCategoria, receitasDoMes, gastosDoMes, parteDoUsuario, saldoDaConta } from "../../estado/financas";
 import { useComunicacao } from "../../estado/comunicacao";
 import { useAgentes, AGENTES, estadoDoAgente, COR_ESTADO } from "../../estado/agentes";
@@ -195,16 +196,17 @@ function BlocoFoco() {
   const comEstudos = useConfig((s) => funcaoLigada("estudos", s.funcoesDesligadas));
   const hoje = hojeISO();
   const doDia = sessoes.filter((s) => s.etapa === "foco" && s.situacao === "concluida" && diaDoMomento(s.inicio) === hoje);
-  const minutos = somar(doDia, (s) => s.minutos);
+  const focosDoDia = sessoes.filter((s) => s.etapa === "foco" && diaDoMomento(s.inicio) === hoje);
+  const minutos = somar(focosDoDia, (s) => tempoEfetivoMs(s) / 60000);
   const porMateria = new Map<string, number>();
-  for (const s of doDia) porMateria.set(s.materiaId ?? "", (porMateria.get(s.materiaId ?? "") ?? 0) + s.minutos);
+  for (const s of focosDoDia) porMateria.set(s.materiaId ?? "", (porMateria.get(s.materiaId ?? "") ?? 0) + tempoEfetivoMs(s) / 60000);
   const semana = Array.from({ length: 7 }, (_, i) => paraISO(addDays(new Date(), i - 6)));
   const minutosDia = new Map<string, number>();
-  for (const s of sessoes) if (s.etapa === "foco" && s.situacao === "concluida") minutosDia.set(diaDoMomento(s.inicio), (minutosDia.get(diaDoMomento(s.inicio)) ?? 0) + s.minutos);
+  for (const s of sessoes) if (s.etapa === "foco") minutosDia.set(diaDoMomento(s.inicio), (minutosDia.get(diaDoMomento(s.inicio)) ?? 0) + tempoEfetivoMs(s) / 60000);
 
   return (
     <div className="coluna">
-      <Cronometro />
+      <CronometroPomodoro />
       <div className="foco-numeros">
         <div className="coluna" style={{ gap: 0 }}>
           <span className="numero-medio">{doDia.length}</span>
@@ -225,62 +227,6 @@ function BlocoFoco() {
         <span className="rotulo-secao">{T.inicio.focoSemana}</span>
         <div className="item-extra">
           <BarrasVerticais altura={64} formatar={(v) => `${v} min`} barras={semana.map((d) => ({ rotulo: formatar(d, "EEEEE"), valor: minutosDia.get(d) ?? 0 }))} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-const ETAPAS: EtapaPomodoro[] = ["foco", "pausa_curta", "pausa_longa"];
-
-function Cronometro() {
-  const p = usePomodoro();
-  const materias = useEstudos((s) => s.materias);
-  const comEstudos = useConfig((s) => funcaoLigada("estudos", s.funcoesDesligadas));
-  const ciclos = useConfig((s) => s.pomodoro.ciclos);
-  const [agora, setAgora] = useState(() => Date.now());
-  const iniciado = p.rodando || p.restanteMs != null;
-
-  useEffect(() => {
-    if (!p.rodando) return;
-    const t = window.setInterval(() => setAgora(Date.now()), 500);
-    return () => window.clearInterval(t);
-  }, [p.rodando]);
-
-  const restante = restanteAtual(p, agora);
-  const progresso = p.duracaoMs > 0 ? 1 - restante / p.duracaoMs : 0;
-  const cor = p.etapa === "foco" ? "var(--destaque)" : "var(--sucesso)";
-
-  return (
-    <div className="foco-cronometro" data-rodando={p.rodando ? "sim" : "nao"}>
-      <div className="foco-anel">
-        <Anel progresso={iniciado ? progresso : 0} tamanho={132} espessura={8} cor={cor} />
-        <div className="foco-anel-centro">
-          <span className="foco-relogio">{formatarRelogio(restante)}</span>
-          <span className="texto-3" style={{ fontSize: 11 }}>{T.pomodoro.etapas[p.etapa]}</span>
-          {p.etapa === "foco" && <span className="texto-3" style={{ fontSize: 10 }}>{T.pomodoro.ciclo(p.ciclo, ciclos)}</span>}
-        </div>
-      </div>
-      <div className="foco-lado">
-        <div className="segmentado foco-etapas" role="tablist">
-          {ETAPAS.map((e) => (
-            <button key={e} type="button" role="tab" aria-selected={p.etapa === e} disabled={iniciado && p.etapa !== e} onClick={() => p.escolherEtapa(e)}>
-              {T.pomodoro.etapasCurtas[e]}
-            </button>
-          ))}
-        </div>
-        {p.etapa === "foco" && comEstudos && (
-          <select className="seletor" aria-label={T.pomodoro.materia} value={p.materiaId ?? ""} onChange={(e) => p.definirVinculo(e.target.value || undefined, p.tarefaId)}>
-            <option value="">{T.pomodoro.semMateria}</option>
-            {materias.map((m) => <option key={m.id} value={m.id}>{m.nome}</option>)}
-          </select>
-        )}
-        <div className="linha" style={{ gap: 6 }}>
-          <Botao variante={p.rodando ? "secundario" : "primario"} icone={p.rodando ? <Pause size={14} /> : <Play size={14} />} onClick={p.alternar} style={{ flex: 1 }}>
-            {p.rodando ? T.pomodoro.pausar : p.restanteMs != null ? T.pomodoro.continuar : T.pomodoro.iniciar}
-          </Botao>
-          {iniciado && <Botao soIcone icone={<RotateCcw size={14} />} aria-label={T.pomodoro.reiniciar} title={T.pomodoro.reiniciar} onClick={p.reiniciar} />}
-          <Botao soIcone icone={<SkipForward size={14} />} aria-label={T.pomodoro.pular} title={T.pomodoro.pular} onClick={p.pular} />
         </div>
       </div>
     </div>

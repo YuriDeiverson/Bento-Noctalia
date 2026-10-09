@@ -23,7 +23,7 @@ const { estadoDaPonte } = await servidor.ssrLoadModule("/src/ponte/ponteLocal.ts
 const { T } = await servidor.ssrLoadModule("/src/textos/textos.ts");
 
 beforeEach(() => {
-  usePomodoro.setState({ etapa: "foco", rodando: false, terminaEm: null, restanteMs: null, inicioEtapa: null, duracaoMs: 1500000, sessoes: [], materiaId: undefined, tarefaId: undefined });
+  usePomodoro.setState({ etapa: "foco", estado: "idle", rodando: false, terminaEm: null, restanteMs: null, duracaoMs: 1500000, inicioEtapa: null, sessaoId: null, inicioFocoEm: null, focoAcumuladoMs: 0, inicioPausaEm: null, pausas: 0, tempoPausaMs: 0, ciclo: 1, sessoes: [], materiaId: undefined, tarefaId: undefined });
   useRotina.setState({ tarefas: [], habitos: [], registros: {}, dias: {} });
   useComunicacao.setState({ conexoes: [], memoria: [], conversas: [] });
   useConversando.setState({ conversaId: null, fase: null, agente: null, parcial: "" });
@@ -69,7 +69,7 @@ test("pausa e retoma o tempo real sem reiniciar a duração", () => {
 test("encerrar mantém o timer parado mesmo com próxima etapa automática", () => {
   useConfig.setState({ pomodoro: { ...useConfig.getState().pomodoro, autoProxima: true } });
   usePomodoro.getState().iniciar(25);
-  usePomodoro.setState({ terminaEm: Date.now() + 1200000 });
+  usePomodoro.setState({ terminaEm: Date.now() + 1200000, focoAcumuladoMs: 5 * 60000, inicioFocoEm: null });
   assert.equal(recursos.controlarPomodoro("encerrar").tipo, "dados");
   const p = usePomodoro.getState();
   assert.equal(p.rodando, false);
@@ -83,6 +83,7 @@ test("encerrar mantém o timer parado mesmo com próxima etapa automática", () 
 test("continuar não inicia uma sessão expirada", () => {
   usePomodoro.setState({ inicioEtapa: new Date().toISOString(), restanteMs: 0 });
   assert.equal(recursos.controlarPomodoro("continuar").tipo, "erro");
+  assert.equal(recursos.controlarPomodoro("encerrar").tipo, "erro");
   assert.equal(usePomodoro.getState().rodando, false);
 });
 
@@ -361,9 +362,11 @@ test("ajuda e conquistas escondem o que pertence a funções desligadas", async 
   assert.ok(abaLigada("midia"));
 });
 
-test("a navegação mantém a página de atualização disponível", async () => {
+test("a navegação mantém Pomodoro disponível em Organização", async () => {
   const { BARRA_PADRAO } = await servidor.ssrLoadModule("/src/estado/configuracoes.ts");
+  const { GRUPO_DA_ROTA } = await servidor.ssrLoadModule("/src/estado/configuracoes.ts");
   const { rotaLigada } = await servidor.ssrLoadModule("/src/utilitarios/funcoes.ts");
-  assert.ok(BARRA_PADRAO.some((item) => item.rota === "atualizacao" && item.visivel));
-  assert.equal(rotaLigada("atualizacao", []), true);
+  assert.ok(BARRA_PADRAO.some((item) => item.rota === "pomodoro" && item.visivel));
+  assert.equal(GRUPO_DA_ROTA.pomodoro, "organizacao");
+  assert.equal(rotaLigada("pomodoro", []), true);
 });

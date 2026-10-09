@@ -10,9 +10,9 @@ const DESTAQUE_ESCURO_PADRAO = "#a78bfa";
 export type Tema = "claro" | "escuro" | "sistema";
 export type Paleta = "padrao" | "areia" | "grafite" | "floresta" | "oceano";
 export type ModoBorda = "fixo" | "esconder" | "inteligente";
-export type AbaIlha = "calendario" | "hoje" | "captura" | "midia" | "foco" | "habitos" | "chat" | "conexoes" | "avisos" | "claude";
+export type AbaIlha = "calendario" | "hoje" | "captura" | "midia" | "foco" | "habitos" | "chat" | "conexoes" | "avisos" | "claude" | "vagas";
 
-export const ABAS_ILHA: AbaIlha[] = ["calendario", "claude", "conexoes", "chat", "hoje", "captura", "midia", "foco", "habitos", "avisos"];
+export const ABAS_ILHA: AbaIlha[] = ["calendario", "claude", "vagas", "captura", "midia", "foco", "avisos"];
 export type RepousoIlha = "nada" | "relogio" | "midia" | "agente";
 export type BlocoInicio =
   | "time" | "hoje" | "foco" | "financas" | "conexoes" | "revisoes" | "mapa" | "conquistas";
@@ -28,28 +28,36 @@ export const BARRA_PADRAO: ItemBarra[] = [
   { rota: "chat", visivel: true },
   { rota: "conexoes", visivel: true },
   { rota: "journal", visivel: true },
-  { rota: "estudos", visivel: true },
-  { rota: "financas", visivel: true },
-  { rota: "metas", visivel: true },
   { rota: "calendario", visivel: true },
+  { rota: "estudos", visivel: true },
+  { rota: "metas", visivel: true },
+  { rota: "financas", visivel: true },
+  { rota: "livros", visivel: true },
+  { rota: "vagas", visivel: true },
+  { rota: "pomodoro", visivel: true },
+  { rota: "projetos", visivel: true },
   { rota: "conquistas", visivel: true },
 ];
 
-export const GRUPO_DA_ROTA: Record<Rota, "principal" | "organizacao" | "ferramentas"> = {
+export const GRUPO_DA_ROTA: Record<Rota, "principal" | "integracoes" | "organizacao" | "produtividade" | "perfil"> = {
   inicio: "principal",
   chat: "principal",
   escritorio: "principal",
-  conexoes: "principal",
+  conexoes: "integracoes",
   journal: "organizacao",
   estudos: "organizacao",
+  pomodoro: "produtividade",
   financas: "organizacao",
   metas: "organizacao",
+  projetos: "produtividade",
+  livros: "organizacao",
+  vagas: "organizacao",
   calendario: "organizacao",
-  atualizacao: "organizacao",
-  ia: "ferramentas",
-  consumo: "ferramentas",
-  conquistas: "ferramentas",
-  configuracoes: "ferramentas",
+  atualizacao: "perfil",
+  ia: "perfil",
+  consumo: "perfil",
+  conquistas: "perfil",
+  configuracoes: "perfil",
 };
 
 export const BLOCOS_INICIO_PADRAO: { id: BlocoInicio; visivel: boolean }[] = [
@@ -105,7 +113,7 @@ export interface Configuracoes {
   ilha: ConfigIlha;
   dock: { ativo: boolean; modo: ModoBorda; favoritos: Rota[]; atalhos: AtalhoDock[]; ampliar: boolean; fundo: string; opacidade: number };
   journal: { humor: boolean; agua: boolean; sono: boolean };
-  pomodoro: { foco: number; curta: number; longa: number; ciclos: number; autoProxima: boolean; tique: boolean };
+  pomodoro: { foco: number; curta: number; longa: number; ciclos: number; autoPausas: boolean; autoProxima: boolean; tique: boolean; sons: boolean; notificacoes: boolean; confirmarEncerramento: boolean };
   agua: { meta: number; copo: number };
   sons: { ligado: boolean; volume: number; categorias: Record<CategoriaSom, boolean> };
   agentes: { nomes: Record<AgenteId, string>; cargos: Record<AgenteId, string>; inatividadeMin: number; favorito: AgenteId };
@@ -143,7 +151,7 @@ export const CONFIG_PADRAO: Configuracoes = {
   ilha: {
     ativa: true,
     modo: "inteligente",
-    blocos: { calendario: true, hoje: true, captura: true, midia: true, foco: true, habitos: false, chat: true, conexoes: true, avisos: true, claude: true },
+    blocos: { calendario: true, hoje: false, captura: true, midia: true, foco: true, habitos: false, chat: false, conexoes: false, avisos: true, claude: true, vagas: true },
     ordemAbas: ABAS_ILHA,
     repouso: "agente",
     tamanho: "media",
@@ -157,7 +165,7 @@ export const CONFIG_PADRAO: Configuracoes = {
   },
   dock: { ativo: false, modo: "inteligente", favoritos: ["chat", "journal", "estudos", "financas", "calendario"], atalhos: [], ampliar: true, fundo: FUNDO_PADRAO_DAS_BORDAS, opacidade: 1 },
   journal: { humor: false, agua: false, sono: false },
-  pomodoro: { foco: 25, curta: 5, longa: 15, ciclos: 4, autoProxima: false, tique: false },
+  pomodoro: { foco: 25, curta: 5, longa: 15, ciclos: 4, autoPausas: false, autoProxima: false, tique: false, sons: true, notificacoes: true, confirmarEncerramento: true },
   agua: { meta: 2000, copo: 250 },
   sons: {
     ligado: true,
@@ -316,7 +324,11 @@ export const useConfig = create<Configuracoes & AcoesConfig>()(
           },
           dock: { ...CONFIG_PADRAO.dock, ...salvo.dock },
           journal: { ...CONFIG_PADRAO.journal, ...salvo.journal },
-          pomodoro: { ...CONFIG_PADRAO.pomodoro, ...salvo.pomodoro },
+          pomodoro: {
+            ...CONFIG_PADRAO.pomodoro,
+            ...salvo.pomodoro,
+            autoPausas: salvo.pomodoro?.autoPausas ?? salvo.pomodoro?.autoProxima ?? CONFIG_PADRAO.pomodoro.autoPausas,
+          },
           agua: { ...CONFIG_PADRAO.agua, ...salvo.agua },
           sons: { ...CONFIG_PADRAO.sons, ...salvo.sons },
           agentes: {

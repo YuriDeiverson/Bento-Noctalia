@@ -5,6 +5,7 @@ import { Cartao, Botao, Campo, Modal, Progresso, Vazio, ConfirmarModal } from ".
 import { useOrganizacao } from "../../estado/organizacao";
 import { useRotina, habitoCumprido } from "../../estado/rotina";
 import { usePomodoro } from "../../estado/pomodoro";
+import { tempoEfetivoMs } from "../../utilitarios/pomodoro";
 import { useFinancas } from "../../estado/financas";
 import { useEstudos } from "../../estado/estudos";
 import { useInterface } from "../../estado/interface";
@@ -32,7 +33,7 @@ function useProgresso() {
         return { atual: pct, alvo: m.alvo, rotulo: `${pct}%` };
       }
       case "estudo": {
-        const horas = somar(sessoes.filter((s) => s.etapa === "foco" && s.situacao === "concluida" && s.materiaId === m.vinculoId), (s) => s.minutos) / 60;
+        const horas = somar(sessoes.filter((s) => s.etapa === "foco" && s.materiaId === m.vinculoId), (s) => tempoEfetivoMs(s) / 60000) / 60;
         return { atual: horas, alvo: m.alvo, rotulo: `${horas.toFixed(1).replace(".", ",")} / ${m.alvo} h` };
       }
       case "financeira": {

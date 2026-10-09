@@ -17,8 +17,12 @@ export type Rota =
   | "conexoes"
   | "journal"
   | "estudos"
+  | "pomodoro"
   | "financas"
   | "metas"
+  | "projetos"
+  | "livros"
+  | "vagas"
   | "calendario"
   | "atualizacao"
   | "ia"
@@ -46,9 +50,12 @@ export interface Tarefa {
   materiaId?: string;
   colunaId?: string;
   metaId?: string;
+  projetoId?: string;
   prioridade: Prioridade;
   checklist: ItemChecklist[];
   estimativaPomodoros?: number;
+  estimativaMinutos?: number;
+  alteradaEm?: string;
   criadaEm: string;
   concluidaEm?: string;
   ordem: number;
@@ -167,15 +174,23 @@ export interface RegistroRevisao {
 }
 
 export type EtapaPomodoro = "foco" | "pausa_curta" | "pausa_longa";
+export type EstadoSessaoPomodoro = "idle" | "running" | "paused" | "completed" | "interrupted";
 
 export interface SessaoPomodoro {
   id: string;
   etapa: EtapaPomodoro;
   inicio: string;
+  fim?: string;
   minutos: number;
   materiaId?: string;
   tarefaId?: string;
+  projetoId?: string;
   situacao: "concluida" | "interrompida";
+  duracaoPlanejadaMs?: number;
+  tempoFocadoMs?: number;
+  pausas?: number;
+  tempoPausaMs?: number;
+  motivo?: "conclusao" | "interrupcao" | "pulo" | "reinicio";
 }
 
 export type TipoConta = "corrente" | "poupanca" | "carteira" | "cartao" | "investimento";

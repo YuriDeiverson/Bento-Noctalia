@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync, mkdirSync, renameSync, existsSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { homedir } from "node:os";
 import { randomUUID } from "node:crypto";
 import { lerSegredo, gravarSegredo, apagarSegredo } from "./segredos";
@@ -71,7 +71,9 @@ export function validarMensagens(valor: unknown): MensagemIa[] {
     }));
 }
 
-const PASTA = join(process.env.APPDATA ?? join(homedir(), "AppData", "Roaming"), "com.bento.desktop");
+const PASTA = process.env.BENTO_PASTA_DADOS
+  ? resolve(process.env.BENTO_PASTA_DADOS)
+  : join(process.env.APPDATA ?? join(homedir(), "AppData", "Roaming"), "com.bento.desktop");
 const ARQUIVO = join(PASTA, "provedores.json");
 
 export function pastaDados() {

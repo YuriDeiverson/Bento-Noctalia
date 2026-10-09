@@ -63,7 +63,7 @@ export function BarraLateral({ recolhida }: { recolhida: boolean }) {
     };
   }, [recolhida, fechados.length]);
 
-  const grupos = (["principal", "organizacao", "ferramentas"] as const).map((g) => ({
+  const grupos = (["principal", "integracoes", "organizacao", "produtividade", "perfil"] as const).map((g) => ({
     grupo: g,
     itens: visiveis.filter((i) => GRUPO_DA_ROTA[i.rota] === g && i.rota !== "configuracoes"),
   }));

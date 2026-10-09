@@ -3,6 +3,7 @@ import type { Habito, SessaoPomodoro, Tarefa, RegistroRevisao, Conexao } from ".
 import { paraISO, hojeISO, deISO } from "./datas";
 import { habitoCumprido } from "../estado/rotina";
 import { lerChave, gravarChave } from "../ponte/armazenamento";
+import { tempoEfetivoMs } from "./pomodoro";
 
 export type FonteMapa = "tudo" | "estudo" | "habitos" | "tarefas" | "commits";
 
@@ -43,9 +44,9 @@ export function commitsDoDia(data: string, conexoes: Conexao[]): number {
 export function minutosEstudoPorDia(sessoes: SessaoPomodoro[]): Map<string, number> {
   const mapa = new Map<string, number>();
   for (const s of sessoes) {
-    if (s.etapa !== "foco" || s.situacao !== "concluida") continue;
+    if (s.etapa !== "foco") continue;
     const d = paraISO(new Date(s.inicio));
-    mapa.set(d, (mapa.get(d) ?? 0) + s.minutos);
+    mapa.set(d, (mapa.get(d) ?? 0) + tempoEfetivoMs(s) / 60000);
   }
   return mapa;
 }

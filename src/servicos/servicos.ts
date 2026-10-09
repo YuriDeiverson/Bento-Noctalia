@@ -54,16 +54,15 @@ function verificarPomodoro() {
   const p = usePomodoro.getState();
   if (!p.rodando || !p.terminaEm) return;
   const falta = p.terminaEm - Date.now();
-  if (falta > 0 && falta <= 10000 && !document.hidden && useConfig.getState().pomodoro.tique) void tocarSom("tick", "pomodoro");
+  const preferencias = useConfig.getState().pomodoro;
+  if (falta > 0 && falta <= 10000 && !document.hidden && preferencias.tique && preferencias.sons) void tocarSom("tick", "pomodoro");
   if (falta > 0) return;
-  const atrasoMs = Date.now() - p.terminaEm;
-  const situacao = atrasoMs > 120000 ? "interrompida" : "concluida";
-  const etapa = p.concluirEtapa(situacao);
+  const etapa = p.concluirEtapa("concluida");
   const texto = etapa === "foco" ? T.pomodoro.fimFoco : T.pomodoro.fimPausa;
-  void tocarSom("finish", "pomodoro");
+  if (preferencias.sons) void tocarSom("finish", "pomodoro");
   useIlha.getState().revelar({ texto, tipo: "sucesso", agente: "organizador", aba: "foco" }, 4500, "alta");
   useAgentes.getState().registrar("organizador", texto);
-  notificar(T.app.nome, texto);
+  if (preferencias.notificacoes) notificar(T.app.nome, texto);
 }
 
 function verificarLembretes() {

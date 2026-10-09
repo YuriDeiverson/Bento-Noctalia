@@ -11,6 +11,8 @@ import { BarrasHorizontais, BarrasVerticais } from "../../componentes/Graficos";
 import { useEstudos, cartoesVencidos } from "../../estado/estudos";
 import { useRotina } from "../../estado/rotina";
 import { usePomodoro } from "../../estado/pomodoro";
+import { useConfig } from "../../estado/configuracoes";
+import { tempoEfetivoMs } from "../../utilitarios/pomodoro";
 import { useInterface } from "../../estado/interface";
 import { useAgentes } from "../../estado/agentes";
 import { T } from "../../textos/textos";
@@ -214,6 +216,11 @@ function Anotacoes({ materia, paginaInicial }: { materia: Materia; paginaInicial
 function CartaoKanban({ tarefa, aoAbrir }: { tarefa: Tarefa; aoAbrir: () => void }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: tarefa.id });
   const feitos = tarefa.checklist.filter((c) => c.feito).length;
+  const sessoes = usePomodoro((s) => s.sessoes);
+  const estadoPomodoro = usePomodoro((s) => s.estado);
+  const minutosFoco = sessoes
+    .filter((sessao) => sessao.tarefaId === tarefa.id && sessao.etapa === "foco")
+    .reduce((total, sessao) => total + tempoEfetivoMs(sessao), 0) / 60000;
   return (
     <div
       ref={setNodeRef}
@@ -233,6 +240,28 @@ function CartaoKanban({ tarefa, aoAbrir }: { tarefa: Tarefa; aoAbrir: () => void
         {tarefa.data && <span className="etiqueta"><CalendarClock size={10} />{descreverDistancia(tarefa.data)}</span>}
         {tarefa.checklist.length > 0 && <span className="etiqueta"><ListChecks size={10} />{feitos}/{tarefa.checklist.length}</span>}
         {tarefa.estimativaPomodoros ? <span className="etiqueta">{tarefa.estimativaPomodoros} x 25 min</span> : null}
+        {minutosFoco > 0 && <span className="etiqueta">{T.pomodoro.minutos(minutosFoco)} {T.pomodoro.realizado.toLowerCase()}</span>}
+        {tarefa.status !== "concluida" && tarefa.status !== "cancelada" && (
+          <Botao
+            pequeno
+            icone={<Timer size={11} />}
+            disabled={estadoPomodoro === "running" || estadoPomodoro === "paused"}
+            title={T.pomodoro.iniciar}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              const pomodoro = usePomodoro.getState();
+              if (pomodoro.estado === "running" || pomodoro.estado === "paused") return;
+              pomodoro.escolherEtapa("foco");
+              pomodoro.definirVinculo(tarefa.materiaId, tarefa.id);
+              pomodoro.iniciar();
+              if (useConfig.getState().pomodoro.sons) void tocarSom("work", "pomodoro");
+              useInterface.getState().irPara("pomodoro");
+            }}
+          >
+            {T.pomodoro.iniciar}
+          </Botao>
+        )}
       </div>
     </div>
   );
@@ -939,7 +968,7 @@ function CabecalhoMateria({ materia, aba, aoAba, aoExcluir }: { materia: Materia
   const sessoes = usePomodoro((s) => s.sessoes);
   const rodando = usePomodoro((s) => s.rodando);
   const vinculo = usePomodoro((s) => s.materiaId);
-  const minutos = sessoes.filter((x) => x.materiaId === materia.id && x.etapa === "foco" && x.situacao === "concluida").reduce((a, x) => a + x.minutos, 0);
+  const minutos = sessoes.filter((x) => x.materiaId === materia.id && x.etapa === "foco").reduce((a, x) => a + tempoEfetivoMs(x) / 60000, 0);
   const pendentes = cartoesVencidos(cartoes).length;
   const cor = area?.cor ?? "var(--destaque)";
   const estudandoAqui = rodando && vinculo === materia.id;

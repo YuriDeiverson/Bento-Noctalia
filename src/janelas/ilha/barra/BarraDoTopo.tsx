@@ -1,14 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { ChevronUp, LayoutGrid, ListTodo, Palette, SlidersHorizontal } from "lucide-react";
-import { useConfig, type AbaIlha } from "../../../estado/configuracoes";
-import { funcaoLigada } from "../../../utilitarios/funcoes";
-import { useRotina, tarefasDoDia } from "../../../estado/rotina";
+import { ChevronUp, LayoutGrid, Palette, SlidersHorizontal } from "lucide-react";
 import { useControleRapido, usarAudio, usarRede } from "../../../estado/controleRapido";
 import { T } from "../../../textos/textos";
 import { tocarSom } from "../../../ponte/sons";
 import { usarCursorFora } from "../../../desktop/desktop";
-import { hojeISO } from "../../../utilitarios/datas";
 import { controle, type EstadoSistema } from "../../../ponte/ponteLocal";
 import { PainelRapido } from "./PainelRapido";
 import { Bandeja } from "./Bandeja";
@@ -34,7 +30,6 @@ interface PropsBarra {
   escala: number;
   larguraDaIlha: number;
   aparencia: AparenciaDeBorda;
-  aoAbrirAba: (aba: AbaIlha) => void;
   aoUsar: (emUso: boolean) => void;
 }
 
@@ -43,9 +38,7 @@ function rotuloDoWifi(rede: EstadoSistema) {
   return rede.wifi.conectado && rede.wifi.ssid ? T.ilha.barra.wifi(rede.wifi.ssid) : T.ilha.barra.wifiSemRede;
 }
 
-function LadoEsquerdo({ pop, alternarPersonalizacao, aoAbrirAba }: { pop: Pop; alternarPersonalizacao: () => void; aoAbrirAba: (aba: AbaIlha) => void }) {
-  const estadoIlha = useIlha((s) => s.estado);
-  const abaIlha = useIlha((s) => s.aba);
+function LadoEsquerdo({ pop, alternarPersonalizacao }: { pop: Pop; alternarPersonalizacao: () => void }) {
   const iniciar = useRef(criarAlternadorDoIniciar(controle.iniciar, controle.alternarIniciar));
   const relogioIniciar = useRef<number | undefined>(undefined);
   const [iniciarOcupado, setIniciarOcupado] = useState(false);
@@ -55,12 +48,6 @@ function LadoEsquerdo({ pop, alternarPersonalizacao, aoAbrirAba }: { pop: Pop; a
     window.clearInterval(relogioIniciar.current);
     relogioIniciar.current = window.setInterval(() => iniciar.current.preparar(), INTERVALO_LEITURA_INICIAR_MS);
   };
-  const tarefas = useRotina((s) => s.tarefas);
-  const comTarefas = useConfig((s) => funcaoLigada("journal", s.funcoesDesligadas));
-  const doDia = tarefasDoDia(tarefas, hojeISO()).filter((t) => t.status !== "cancelada");
-  const feitas = doDia.filter((t) => t.status === "concluida").length;
-  const rotuloTarefas = doDia.length ? T.ilha.barra.tarefasHojeDica(feitas, doDia.length) : T.ilha.barra.semTarefas;
-
   return (
     <div className="ilha-barra-lado">
       <button
@@ -96,12 +83,6 @@ function LadoEsquerdo({ pop, alternarPersonalizacao, aoAbrirAba }: { pop: Pop; a
       >
         <LayoutGrid size={14} />
       </button>
-      {comTarefas && (
-        <button type="button" className="ilha-barra-botao ilha-barra-texto" title={rotuloTarefas} aria-label={rotuloTarefas} aria-expanded={estadoIlha === "expandida" && abaIlha === "hoje"} data-ativo={estadoIlha === "expandida" && abaIlha === "hoje" || undefined} onClick={() => aoAbrirAba("hoje")}>
-          <ListTodo size={13} />
-          <span className="numero">{doDia.length ? T.ilha.barra.tarefasHoje(feitas, doDia.length) : "0"}</span>
-        </button>
-      )}
     </div>
   );
 }
@@ -151,7 +132,7 @@ function LadoDireito({ pop, alternarPainel, alternarBandeja }: { pop: Pop; alter
   );
 }
 
-export function BarraDoTopo({ visivel, escala, larguraDaIlha, aparencia, aoAbrirAba, aoUsar }: PropsBarra) {
+export function BarraDoTopo({ visivel, escala, larguraDaIlha, aparencia, aoUsar }: PropsBarra) {
   const [pop, setPop] = useState<Pop>(null);
   const [sobre, setSobre] = useState(false);
   usarAudio(visivel, pop?.tipo === "painel" ? 1000 : 3000);
@@ -237,11 +218,6 @@ export function BarraDoTopo({ visivel, escala, larguraDaIlha, aparencia, aoAbrir
               <LadoEsquerdo
                 pop={pop}
                 alternarPersonalizacao={alternarPersonalizacao}
-                aoAbrirAba={(aba) => {
-                  setPop(null);
-                  void tocarSom(useIlha.getState().estado === "expandida" && useIlha.getState().aba === aba ? "close" : "open");
-                  aoAbrirAba(aba);
-                }}
               />
             </div>
             <div className="ilha-barra-aba ilha-barra-aba-direita" onPointerEnter={aoEntrar} onPointerLeave={aoSair}>

@@ -58,6 +58,7 @@ export const useRotina = create<EstadoRotina>()(
             prioridade: "media",
             checklist: [],
             criadaEm: new Date().toISOString(),
+            alteradaEm: new Date().toISOString(),
             ordem: Date.now(),
             ...dados,
             titulo: dados.titulo.trim().slice(0, 200),
@@ -66,12 +67,12 @@ export const useRotina = create<EstadoRotina>()(
           return tarefa;
         },
         atualizarTarefa: (id, parcial) =>
-          comHistorico((s) => ({ tarefas: s.tarefas.map((t) => (t.id === id ? { ...t, ...parcial } : t)) })),
+          comHistorico((s) => ({ tarefas: s.tarefas.map((t) => (t.id === id ? { ...t, ...parcial, alteradaEm: new Date().toISOString() } : t)) })),
         mudarStatus: (id, status) =>
           comHistorico((s) => ({
             tarefas: s.tarefas.map((t) =>
               t.id === id
-                ? { ...t, status, concluidaEm: status === "concluida" ? new Date().toISOString() : undefined }
+                ? { ...t, status, alteradaEm: new Date().toISOString(), concluidaEm: status === "concluida" ? new Date().toISOString() : undefined }
                 : t,
             ),
           })),

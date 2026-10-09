@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import {
-  ListTodo, Zap, Music, Timer, Repeat, CalendarDays, MessageCircle, Plug, Bell, Volume2, VolumeX, AppWindow, ChevronUp, Check, CircleAlert, Download, SquareTerminal, ShieldAlert, LoaderCircle,
+  BriefcaseBusiness, ListTodo, Zap, Music, Timer, Repeat, CalendarDays, MessageCircle, Plug, Bell, Volume2, VolumeX, AppWindow, ChevronUp, Check, CircleAlert, Download, SquareTerminal, ShieldAlert, LoaderCircle,
   type LucideIcon,
 } from "lucide-react";
 import { useConfig, type AbaIlha } from "../../estado/configuracoes";
@@ -16,7 +16,7 @@ import { Anel } from "../../componentes/Graficos";
 import { T } from "../../textos/textos";
 import { tocarSom } from "../../ponte/sons";
 import {
-  VisaoHoje, VisaoCaptura, VisaoMidia, VisaoFoco, VisaoHabitos, VisaoConexoes, VisaoCalendario, VisaoAvisos,
+  VisaoHoje, VisaoCaptura, VisaoMidia, VisaoFoco, VisaoHabitos, VisaoConexoes, VisaoCalendario, VisaoAvisos, VisaoVagas,
 } from "./Visoes";
 import { alguemCobre } from "../geometria";
 import { VisaoChat } from "./VisaoChat";
@@ -27,7 +27,6 @@ import { useClaudeCode, sessaoAtiva } from "../../estado/claudeCode";
 import { useAtualizacao } from "../../estado/atualizacao";
 import { NATIVO, usarAreaInterativa, usarCursorFora, usarEstadoDaFrente, usarMenuDeContextoNativo } from "../../desktop/desktop";
 import { BarraDoTopo, ALTURA_DA_FAIXA } from "./barra/BarraDoTopo";
-import { alternarAbaDaBarra } from "./barra/acoesDaBarra";
 import { EspacoDoPersonagem, PersonagemContinuo } from "./animacoes/PersonagemContinuo";
 import { EtapaDeTrabalho, EtapasAnimadas } from "./animacoes/EtapasAnimadas";
 import { usarAparenciaDeBorda, variaveisDaBorda } from "../aparencia";
@@ -36,12 +35,13 @@ import type { AgenteId, EstadoAgente } from "../../tipos";
 import "./ilha.css";
 
 const ICONE_ABA: Record<AbaIlha, LucideIcon> = {
+  vagas: BriefcaseBusiness,
   hoje: ListTodo,
   captura: Zap,
   midia: Music,
   foco: Timer,
   habitos: Repeat,
- chat: MessageCircle,
+  chat: MessageCircle,
   conexoes: Plug,
   calendario: CalendarDays,
   avisos: Bell,
@@ -49,12 +49,13 @@ const ICONE_ABA: Record<AbaIlha, LucideIcon> = {
 };
 
 const VISAO_ABA: Record<AbaIlha, () => React.JSX.Element> = {
+  vagas: VisaoVagas,
   hoje: VisaoHoje,
   captura: VisaoCaptura,
   midia: VisaoMidia,
   foco: VisaoFoco,
   habitos: VisaoHabitos,
- chat: VisaoChat,
+  chat: VisaoChat,
   conexoes: VisaoConexoes,
   calendario: VisaoCalendario,
   avisos: VisaoAvisos,
@@ -62,12 +63,13 @@ const VISAO_ABA: Record<AbaIlha, () => React.JSX.Element> = {
 };
 
 const ALTURA_ABA: Record<AbaIlha, number> = {
+  vagas: 260,
   hoje: 250,
   captura: 168,
   midia: 184,
   foco: 176,
   habitos: 230,
- chat: 300,
+  chat: 300,
   conexoes: 350,
   calendario: 286,
   avisos: 178,
@@ -81,9 +83,9 @@ function estadoCalmo(e: EstadoAgente): EstadoAgente {
 }
 const LARGURA_EXPANDIDA = 660;
 const ALTURA_COMPACTA = 30;
-const AGENTE_DA_ABA: Partial<Record<AbaIlha, AgenteId>> = { hoje: "organizador", foco: "tutor", conexoes: "java", claude: "java" };
+const AGENTE_DA_ABA: Partial<Record<AbaIlha, AgenteId>> = { vagas: "organizador", foco: "tutor", claude: "java" };
 const RODIZIO_MS = 8 * 60_000;
-const ABAS_SEM_LATERAL: AbaIlha[] = ["chat", "midia"];
+const ABAS_SEM_LATERAL: AbaIlha[] = ["vagas", "midia"];
 
 function agenteDoRodizio(favorito: AgenteId, agora: number): AgenteId {
   const ordem: AgenteId[] = [favorito, ...AGENTES.filter((a) => a !== favorito)];
@@ -166,7 +168,7 @@ export function Ilha() {
   const claudeInstalado = useConfig((s) => s.claudeInstalado);
   const desligadas = useConfig((s) => s.funcoesDesligadas);
   const abas = cfg.ordemAbas.filter((a) => cfg.blocos[a] && (a !== "claude" || claudeInstalado) && abaLigada(a, desligadas));
-  const abaAtual = abas.includes(aba) ? aba : abas[0] ?? "hoje";
+  const abaAtual = abas.includes(aba) ? aba : abas[0] ?? "calendario";
   const frente = usarEstadoDaFrente(cfg.ativa);
   const [lateraisLivresNativo, setLateraisLivresNativo] = useState(true);
   useEffect(() => {
@@ -292,7 +294,7 @@ export function Ilha() {
   const barraVisivel = cfg.laterais && estadoEfetivo !== "escondida" && lateraisLivres;
 
   const abaDaCompacta = (): AbaIlha | undefined =>
-    compacta.tipo === "revelacao" ? revelacao?.aba : compacta.tipo === "pomodoro" ? "foco" : compacta.tipo === "midia" ? "midia" : compacta.tipo === "trabalho" ? "chat" : compacta.tipo === "claude" || compacta.tipo === "claudePedido" ? "claude" : undefined;
+    compacta.tipo === "revelacao" ? revelacao?.aba : compacta.tipo === "pomodoro" ? "foco" : compacta.tipo === "midia" ? "midia" : compacta.tipo === "trabalho" ? "vagas" : compacta.tipo === "claude" || compacta.tipo === "claudePedido" ? "claude" : undefined;
 
   const acionarCompacta = () => {
     window.clearTimeout(relogioHover.current);
@@ -427,7 +429,6 @@ export function Ilha() {
           escala={escala}
           larguraDaIlha={alvo.w * escala}
           aparencia={aparencia}
-          aoAbrirAba={(a) => alternarAbaDaBarra(abas.includes(a) ? a : abaAtual)}
           aoUsar={setBarraEmUso}
         />
       )}
@@ -438,7 +439,7 @@ export function Ilha() {
             if (!Array.from(e.dataTransfer.types).includes("Files")) return;
             ultimaPassagem.current = null;
             setRevelada(true);
-            abrir("chat");
+            abrir("captura");
           }}
           onPointerEnter={() => {
             if (cfg.modo === "inteligente") {
@@ -473,8 +474,8 @@ export function Ilha() {
         }}
         onDragEnter={(e) => {
           if (!Array.from(e.dataTransfer.types).includes("Files")) return;
-          if (useIlha.getState().estado !== "expandida" || useIlha.getState().aba !== "chat") {
-            abrir("chat");
+          if (useIlha.getState().estado !== "expandida" || useIlha.getState().aba !== "captura") {
+            abrir("captura");
             void tocarSom("open");
           }
         }}
@@ -581,7 +582,7 @@ export function Ilha() {
                         aria-label={T.ilha.abrirSistema}
                         data-dica={T.ilha.abrirSistema}
                         onClick={() => {
-                          const rota = { hoje: "journal", captura: "inicio", midia: "inicio", foco: "estudos", habitos: "journal", chat: "chat", conexoes: "conexoes", calendario: "calendario", avisos: "inicio", claude: "configuracoes" } as const;
+                          const rota = { vagas: "vagas", hoje: "journal", captura: "inicio", midia: "inicio", foco: "estudos", habitos: "journal", chat: "chat", conexoes: "conexoes", calendario: "calendario", avisos: "inicio", claude: "configuracoes" } as const;
                           irPara(rota[abaAtual]);
                           recolher();
                           void tocarSom("open");

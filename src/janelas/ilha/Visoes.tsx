@@ -23,6 +23,7 @@ import { ConexaoNaIlha } from "./ConexaoNaIlha";
 import { EspacoDoPersonagem } from "./animacoes/PersonagemContinuo";
 import { funcaoLigada } from "../../utilitarios/funcoes";
 import { useFinancas } from "../../estado/financas";
+import { useVagas } from "../../estado/vagas";
 import { interpretarQuando } from "../../utilitarios/linguagem";
 import { capturar, tiposDeCapturaLigados, type TipoCaptura } from "../../utilitarios/captura";
 import { confirmarComando } from "../../utilitarios/comandos";
@@ -30,6 +31,24 @@ import { formatarDinheiro } from "../../utilitarios/dinheiro";
 import { tocarSom } from "../../ponte/sons";
 import { addMonths, eachDayOfInterval, endOfMonth, endOfWeek, isSameMonth, startOfMonth, startOfWeek } from "date-fns";
 import type { CartaoConfirmacao, EtapaPomodoro } from "../../tipos";
+
+export function VisaoVagas() {
+  const criar = useVagas((s) => s.criar);
+  const [etapa, setEtapa] = useState<"nome" | "link" | "fim">("nome");
+  const [nome, setNome] = useState("");
+  const [link, setLink] = useState("");
+  const enviarNome = (e: React.FormEvent) => { e.preventDefault(); if (nome.trim()) setEtapa("link"); };
+  const enviarLink = (e: React.FormEvent) => { e.preventDefault(); criar(nome.trim(), link.trim()); setEtapa("fim"); };
+  const reiniciar = () => { setNome(""); setLink(""); setEtapa("nome"); };
+  return <div className="ilha-vagas-chat">
+    <div className="ilha-vagas-mensagem"><strong>Bento</strong><span>Vamos cadastrar sua vaga. Qual é o nome da vaga ou da empresa?</span></div>
+    {nome && etapa !== "nome" && <div className="ilha-vagas-resposta">{nome.trim()}</div>}
+    {etapa === "nome" && <form onSubmit={enviarNome}><input autoFocus value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex.: Desenvolvedor Front-end" aria-label="Nome da vaga" /><button type="submit" disabled={!nome.trim()}>Continuar</button></form>}
+    {etapa !== "nome" && <div className="ilha-vagas-mensagem"><strong>Bento</strong><span>Qual é o link da vaga? Esse campo é opcional.</span></div>}
+    {etapa === "link" && <form onSubmit={enviarLink}><input value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://... (opcional)" aria-label="Link da vaga" /><button type="submit">Cadastrar</button><button type="button" className="ilha-vagas-pular" onClick={() => { criar(nome.trim(), ""); setEtapa("fim"); }}>Pular</button></form>}
+    {etapa === "fim" && <><div className="ilha-vagas-mensagem ilha-vagas-sucesso"><strong>Pronto!</strong><span>Vaga cadastrada! Ela já está no quadro de Vagas como Enviada.</span></div><button className="ilha-vagas-outra" onClick={reiniciar}>Cadastrar outra vaga</button></>}
+  </div>;
+}
 
 function Cartao({ veu, children }: { veu?: string; children: React.ReactNode }) {
   return (

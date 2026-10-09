@@ -14,7 +14,7 @@ O Bento é um aplicativo desktop que fica junto do Windows. Estilo Notion para u
 | ------ | --------- | -------------- |
 | **Ilha** | Topo da tela | Mídia tocando, pomodoro, tarefas do dia, captura rápida e avisos do time |
 | **Dock** | Base da tela, opcional | Pode substituir a barra de tarefas e mostrar os apps abertos com prévias; por padrão, a barra de tarefas do Windows continua visível |
-| **Sistema** | Janela própria | Todas as áreas do app: início, chat, finanças, estudos, metas, calendário e configurações |
+| **Sistema** | Janela própria | Todas as áreas do app: início, chat, finanças, estudos, Pomodoro, metas, calendário e configurações |
 
 Três princípios guiam o projeto:
 
@@ -57,12 +57,15 @@ Opcional. Quando ativado, substitui a barra de tarefas do Windows com a logo do 
 | **Chat** | Conversa com os agentes, com comandos locais |
 | **Journal** | Tarefas, hábitos, humor, notas e calendário do dia, com desfazer e refazer |
 | **Estudos** | Matérias com páginas, quadro, datas de prova, links e revisão espaçada |
+| **Pomodoro** | Timer recuperável, foco associado a projeto/matéria e tarefa, histórico, estatísticas e preferências de ciclos |
 | **Finanças** | Contas, cartões, transações, orçamento, recorrentes, metas de economia, divisão de contas, lista de compras e relatórios |
 | **Metas** | Pilares de vida, metas medidas por hábitos, horas de estudo, economia ou tarefas, e quadro de visão |
 | **Calendário** | Tudo que tem data no Bento, nas vistas de mês, semana e agenda, com eventos e lembretes recorrentes |
 | **Conexões** | Stripe, GitHub, Vercel, Resend, Notion, Cal.com, n8n, Gmail, Supabase e Cloudflare, cada um com janela própria |
 | **Conquistas** | Marcos e mapa de calor da sua rotina |
 | **Configurações** | Aparência, ilha, dock, sons, atalhos, privacidade, backup e dados |
+
+O Pomodoro salva o ciclo e o histórico no armazenamento local já usado pelo Bento, recupera sessões ativas/pausadas por timestamps e agrupa estatísticas pelo calendário local do computador. O tempo investido em tarefas e projetos é calculado pelas sessões, sem gravar totais duplicados nas tarefas.
 
 ### O time
 
@@ -95,7 +98,7 @@ Cada agente tem oito estados visíveis (ocioso, ouvindo, pensando, escrevendo, s
 O pomodoro, a lista de capacidades e o relatório semanal funcionam sem provedor de IA:
 
 - `/pomodoro 25` inicia o foco, sem sobrescrever uma sessão existente.
-- `/pomodoro pausar`, `/pomodoro continuar` e `/pomodoro encerrar` controlam a sessão atual. Encerrar registra somente os minutos utilizados e não inicia outra etapa.
+- `/pomodoro pausar`, `/pomodoro continuar` e `/pomodoro encerrar` controlam a sessão atual. Interrupções ficam no histórico e não são contabilizadas como concluídas.
 - `/pomodoro status` consulta o estado e o tempo restante real.
 - `/capacidades` lista as ferramentas cadastradas, respeitando as permissões e conexões atuais. Não comprova que o modelo escolhido aceita ferramentas.
 - `/relatorio` calcula os últimos sete dias a partir dos registros locais. Não inclui finanças e não preenche dias sem registro.

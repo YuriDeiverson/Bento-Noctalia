@@ -509,15 +509,19 @@ export default function Configuracoes() {
         <div className="formulario-linha">
           {(["foco", "curta", "longa"] as const).map((k) => (
             <Campo key={k} id={`pm-${k}`} rotulo={k === "foco" ? T.pomodoro.etapas.foco : k === "curta" ? T.pomodoro.etapas.pausa_curta : T.pomodoro.etapas.pausa_longa} dica={T.validacao.entre(1, 180)}>
-              <input id={`pm-${k}`} className="campo" type="number" min={1} max={180} value={cfg.pomodoro[k]} onChange={(e) => { const n = Math.max(1, Math.min(180, Math.round(Number(e.target.value) || 1))); cfg.definir({ pomodoro: { ...cfg.pomodoro, [k]: n } }); usePomodoro.getState().reiniciar(); }} />
+              <input id={`pm-${k}`} className="campo" type="number" min={1} max={180} value={cfg.pomodoro[k]} onChange={(e) => { const n = Math.max(1, Math.min(180, Math.round(Number(e.target.value) || 1))); cfg.definir({ pomodoro: { ...cfg.pomodoro, [k]: n } }); usePomodoro.getState().atualizarDuracao(); }} />
             </Campo>
           ))}
           <Campo id="pm-ciclos" rotulo={T.configuracoes.ciclos} dica={T.validacao.entre(1, 12)}>
             <input id="pm-ciclos" className="campo" type="number" min={1} max={12} value={cfg.pomodoro.ciclos} onChange={(e) => cfg.definir({ pomodoro: { ...cfg.pomodoro, ciclos: Math.max(1, Math.min(12, Math.round(Number(e.target.value) || 1))) } })} />
           </Campo>
         </div>
-        <LinhaAlternador rotulo={T.configuracoes.autoProxima} ligado={cfg.pomodoro.autoProxima} aoMudar={(v) => cfg.definir({ pomodoro: { ...cfg.pomodoro, autoProxima: v } })} />
+        <LinhaAlternador rotulo={T.pomodoro.autoPausas} ligado={cfg.pomodoro.autoPausas} aoMudar={(v) => cfg.definir({ pomodoro: { ...cfg.pomodoro, autoPausas: v } })} />
+        <LinhaAlternador rotulo={T.pomodoro.autoProxima} ligado={cfg.pomodoro.autoProxima} aoMudar={(v) => cfg.definir({ pomodoro: { ...cfg.pomodoro, autoProxima: v } })} />
         <LinhaAlternador rotulo={T.configuracoes.tiquePomodoro} dica={T.configuracoes.tiquePomodoroDica} ligado={cfg.pomodoro.tique} aoMudar={(v) => cfg.definir({ pomodoro: { ...cfg.pomodoro, tique: v } })} />
+        <LinhaAlternador rotulo={T.pomodoro.sons} ligado={cfg.pomodoro.sons} aoMudar={(v) => cfg.definir({ pomodoro: { ...cfg.pomodoro, sons: v } })} />
+        <LinhaAlternador rotulo={T.pomodoro.notificacoes} ligado={cfg.pomodoro.notificacoes} aoMudar={(v) => cfg.definir({ pomodoro: { ...cfg.pomodoro, notificacoes: v } })} />
+        <LinhaAlternador rotulo={T.pomodoro.confirmarInterrupcao} ligado={cfg.pomodoro.confirmarEncerramento} aoMudar={(v) => cfg.definir({ pomodoro: { ...cfg.pomodoro, confirmarEncerramento: v } })} />
       </>
     ),
     agentes: (

@@ -52,6 +52,7 @@ GEMINI.md
 credenciais*.json
 
 # Dados locais
+.bento-dev-data/
 *.db
 *.db-journal
 *.sqlite

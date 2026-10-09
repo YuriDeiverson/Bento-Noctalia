@@ -40,7 +40,7 @@ export function controlarPomodoro(acao: string): { tipo: "erro"; mensagem: strin
   const S = T.chat.recursos;
   if (!["pausar", "continuar", "encerrar"].includes(acao)) return { tipo: "erro", mensagem: S.acaoInvalida };
   if (estado.situacao === "inativo") return { tipo: "erro", mensagem: S.semTimer };
-  if (acao !== "encerrar" && estado.situacao === "finalizado") return { tipo: "erro", mensagem: S.timerExpirado };
+  if (estado.situacao === "finalizado") return { tipo: "erro", mensagem: S.timerExpirado };
   if (acao === "pausar") {
     if (!p.rodando) return { tipo: "erro", mensagem: S.jaPausado };
     p.pausar();
