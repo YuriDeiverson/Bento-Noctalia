@@ -1,2 +1,1 @@
-O Bento é um aplicativo desktop baseado no linux do noctalia,
-
+O Bento é um aplicativo desktop Linux baseado no ecossistema do Noctalia. Estou personalizando a aplicação base de um outro aplicativo integrando minhas próprias configurações de sistema e realizando um customization profunda nos componentes da interface. Apenas para uso pessoal e apenas pessoal.
